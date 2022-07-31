@@ -4,6 +4,7 @@ import {
   ApolloServerPluginLandingPageLocalDefault,
 } from 'apollo-server-core';
 import { ApolloServer, gql } from 'apollo-server-express';
+import 'dotenv/config';
 import express from 'express';
 import { PubSub } from 'graphql-subscriptions';
 import { useServer } from 'graphql-ws/lib/use/ws';
