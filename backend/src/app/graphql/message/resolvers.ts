@@ -48,7 +48,6 @@ export const messageResolvers = {
     newMessageCreated: {
       subscribe: (_parent: any, _args: any, context: any) => {
         const { pubsub } = context;
-        console.log(pubsub.asyncIterator(['NEW_MESSAGE']));
         return pubsub.asyncIterator(['NEW_MESSAGE']);
       },
     },
