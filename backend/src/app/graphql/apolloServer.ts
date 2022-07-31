@@ -1,12 +1,15 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import { ApolloServer, gql } from 'apollo-server-express';
 import express from 'express';
 import { PubSub } from 'graphql-subscriptions';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import message from './message';
+import { messageResolvers, messageTypes } from './message';
 
 const PORT: string | number = process.env.PORT || 4000;
 const pubsub = new PubSub();
@@ -16,8 +19,25 @@ const defaultTypeDefs = gql`
   type Mutation
   type Subscription
 `;
-const typeDefs = [defaultTypeDefs, message.types];
-const resolvers = [message.resolvers];
+
+// Resolver map
+const resolver = {
+  Query: {
+    currentNumber() {
+      return currentNumber;
+    },
+  },
+  // Subscription: {
+  //   numberIncremented: {
+  //     subscribe: () => {
+  //       console.log('hello from apollo');
+  //       return pubsub.asyncIterator(['NUMBER_INCREMENTED']);
+  //     },
+  //   },
+  // },
+};
+const typeDefs = [defaultTypeDefs, messageTypes];
+const resolvers = [messageResolvers, resolver];
 
 // Create schema, which will be used separately by ApolloServer and
 // the WebSocket server.
@@ -38,8 +58,9 @@ const serverCleanup = useServer({ schema }, wsServer);
 // Set up ApolloServer.
 const server = new ApolloServer({
   schema,
-  context: { pubsub },
+  context: ({ req, res }) => ({ req, res, pubsub }),
   plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     // Proper shutdown for the HTTP server.
     ApolloServerPluginDrainHttpServer({ httpServer }),
 

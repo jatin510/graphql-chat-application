@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 
-const types = gql`
+export const messageTypes = gql`
   type Message {
     id: ID
     user: String!
@@ -28,5 +28,3 @@ const types = gql`
     numberIncremented: Int
   }
 `;
-
-export default types;

@@ -1,3 +1,7 @@
+import { PubSub } from 'graphql-subscriptions';
+
+const pubsub = new PubSub();
+
 const messages: any = [
   {
     id: 1,
@@ -19,7 +23,7 @@ interface Message {
   id: string;
 }
 
-export default {
+export const messageResolvers = {
   Query: {
     messages: () => messages,
 
@@ -36,14 +40,11 @@ export default {
       _info: any
     ) => {
       const { content, user } = args;
-      // const { pubSub } = context;
+      console.log(_context.pubsub);
 
       const newMessage = { content, user, id: 1 };
 
       messages.push(newMessage);
-      // pubSub.publish('NUMBER_INCREMENTED', {
-      //   numberIncremented: currentNumber,
-      // });
 
       return { id: 1, message: newMessage };
     },
@@ -51,9 +52,12 @@ export default {
   Subscription: {
     numberIncremented: {
       subscribe: (_parent: any, _args: any, context: any) => {
-        const { pubsub } = context;
+        console.log('hello');
+        console.log(pubsub);
         pubsub.asyncIterator(['NUMBER_INCREMENTED']);
       },
     },
   },
 };
+
+export default messageResolvers;
