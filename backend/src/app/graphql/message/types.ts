@@ -20,11 +20,7 @@ export const messageTypes = gql`
     postMessage(user: String!, content: String!): PostMessageReturnType
   }
 
-  extend type Query {
-    currentNumber: Int
-  }
-
   extend type Subscription {
-    numberIncremented: Int
+    newMessageCreated: Message!
   }
 `;

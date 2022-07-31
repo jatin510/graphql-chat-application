@@ -10,8 +10,6 @@ const messages: any = [
   },
 ];
 
-const currentNumber = 2;
-
 interface PostMessage {
   content: string;
   user: string;
@@ -26,35 +24,32 @@ interface Message {
 export const messageResolvers = {
   Query: {
     messages: () => messages,
-
-    currentNumber() {
-      return currentNumber;
-    },
   },
 
   Mutation: {
     postMessage: (
       _parent: any,
       args: PostMessage,
-      _context: any,
+      context: any,
       _info: any
     ) => {
       const { content, user } = args;
-      console.log(_context.pubsub);
+      const { pubsub } = context;
 
       const newMessage = { content, user, id: 1 };
-
+      pubsub.publish('NEW_MESSAGE', { newMessageCreated: newMessage });
       messages.push(newMessage);
 
       return { id: 1, message: newMessage };
     },
   },
+
   Subscription: {
-    numberIncremented: {
+    newMessageCreated: {
       subscribe: (_parent: any, _args: any, context: any) => {
-        console.log('hello');
-        console.log(pubsub);
-        pubsub.asyncIterator(['NUMBER_INCREMENTED']);
+        const { pubsub } = context;
+        console.log(pubsub.asyncIterator(['NEW_MESSAGE']));
+        return pubsub.asyncIterator(['NEW_MESSAGE']);
       },
     },
   },

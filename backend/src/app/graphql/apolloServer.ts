@@ -20,24 +20,8 @@ const defaultTypeDefs = gql`
   type Subscription
 `;
 
-// Resolver map
-const resolver = {
-  Query: {
-    currentNumber() {
-      return currentNumber;
-    },
-  },
-  // Subscription: {
-  //   numberIncremented: {
-  //     subscribe: () => {
-  //       console.log('hello from apollo');
-  //       return pubsub.asyncIterator(['NUMBER_INCREMENTED']);
-  //     },
-  //   },
-  // },
-};
 const typeDefs = [defaultTypeDefs, messageTypes];
-const resolvers = [messageResolvers, resolver];
+const resolvers = [messageResolvers];
 
 // Create schema, which will be used separately by ApolloServer and
 // the WebSocket server.
@@ -53,7 +37,20 @@ const wsServer = new WebSocketServer({
   server: httpServer,
   path: '/graphql',
 });
-const serverCleanup = useServer({ schema }, wsServer);
+
+const getDynamicContext = async (_ctx: any, _msg: any, _args: any) => {
+  return { pubsub };
+};
+
+const serverCleanup = useServer(
+  {
+    schema,
+    context: (ctx, msg, args) => {
+      return getDynamicContext(ctx, msg, args);
+    },
+  },
+  wsServer
+);
 
 // Set up ApolloServer.
 const server = new ApolloServer({
@@ -76,7 +73,9 @@ const server = new ApolloServer({
     },
   ],
 });
+
 await server.start();
+
 server.applyMiddleware({ app });
 
 // Now that our HTTP server is fully set up, actually listen.
@@ -88,14 +87,3 @@ httpServer.listen(PORT, () => {
     `🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.graphqlPath}`
   );
 });
-
-// In the background, increment a number every second and notify subscribers when
-// it changes.
-let currentNumber = 0;
-function incrementNumber() {
-  currentNumber++;
-  pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
-  setTimeout(incrementNumber, 1000);
-}
-// Start incrementing
-incrementNumber();
